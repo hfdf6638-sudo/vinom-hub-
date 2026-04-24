@@ -1,0 +1,161 @@
+-- 🔥 QAWI FULL + DUEL FEATURES + AUTO PLAY 🔥
+
+local player = game.Players.LocalPlayer
+local rs = game:GetService("RunService")
+local uis = game:GetService("UserInputService")
+
+-- ===== حالات =====
+local speed = false
+local infjump = false
+local spinbot = false
+local autorag = false
+local autoplay = false
+
+-- ===== الشخصية =====
+local function getChar()
+    return player.Character
+end
+
+local function getHRP()
+    local c = getChar()
+    return c and c:FindFirstChild("HumanoidRootPart")
+end
+
+local function getHum()
+    local c = getChar()
+    return c and c:FindFirstChildOfClass("Humanoid")
+end
+
+-- ===== SPEED =====
+rs.Heartbeat:Connect(function()
+    local h = getHum()
+    local r = getHRP()
+    if not h or not r then return end
+
+    if speed and h.MoveDirection.Magnitude > 0 then
+        r.AssemblyLinearVelocity = Vector3.new(
+            h.MoveDirection.X * 60,
+            r.AssemblyLinearVelocity.Y,
+            h.MoveDirection.Z * 60
+        )
+    end
+end)
+
+-- ===== INF JUMP =====
+uis.JumpRequest:Connect(function()
+    if infjump then
+        local r = getHRP()
+        if r then
+            r.AssemblyLinearVelocity = Vector3.new(
+                r.AssemblyLinearVelocity.X, 60, r.AssemblyLinearVelocity.Z
+            )
+        end
+    end
+end)
+
+-- ===== SPINBOT =====
+local function spinOn()
+    local r = getHRP()
+    if not r then return end
+
+    for _,v in pairs(r:GetChildren()) do
+        if v:IsA("BodyAngularVelocity") then v:Destroy() end
+    end
+
+    local bv = Instance.new("BodyAngularVelocity")
+    bv.MaxTorque = Vector3.new(0, math.huge, 0)
+    bv.AngularVelocity = Vector3.new(0, 50, 0)
+    bv.Parent = r
+end
+
+local function spinOff()
+    local r = getHRP()
+    if not r then return end
+
+    for _,v in pairs(r:GetChildren()) do
+        if v:IsA("BodyAngularVelocity") then v:Destroy() end
+    end
+end
+
+-- ===== ANTI RAGDOLL =====
+local function antiRagdoll()
+    local h = getHum()
+    if not h then return end
+    pcall(function()
+        h:ChangeState(Enum.HumanoidStateType.Running)
+    end)
+end
+
+rs.Heartbeat:Connect(function()
+    if autorag then
+        antiRagdoll()
+    end
+end)
+
+-- ===== AUTO PLAY =====
+local point1 = Vector3.new(-476, -6, 92)
+local point2 = Vector3.new(-483, -5, 94)
+
+rs.Heartbeat:Connect(function()
+    if not autoplay then return end
+
+    local h = getHum()
+    local r = getHRP()
+    if not h or not r then return end
+
+    local target = (tick()%4 < 2) and point1 or point2
+    local dir = target - r.Position
+    local flat = Vector3.new(dir.X,0,dir.Z)
+
+    if flat.Magnitude > 1 then
+        local mv = flat.Unit
+        h:Move(mv,false)
+        r.AssemblyLinearVelocity = Vector3.new(
+            mv.X*55,
+            r.AssemblyLinearVelocity.Y,
+            mv.Z*55
+        )
+    end
+end)
+
+-- ===== GUI =====
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "VINOM Duls"
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0,300,0,320)
+frame.Position = UDim2.new(0.5,-150,0.5,-160)
+frame.BackgroundColor3 = Color3.fromRGB(15,15,15)
+
+local layout = Instance.new("UIListLayout", frame)
+layout.Padding = UDim.new(0,5)
+
+local function btn(name, callback)
+    local b = Instance.new("TextButton", frame)
+    b.Size = UDim2.new(1,-10,0,40)
+    b.Text = name
+    b.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    b.TextColor3 = Color3.new(1,1,1)
+    b.MouseButton1Click:Connect(callback)
+end
+
+btn("Speed", function()
+    speed = not speed
+end)
+
+btn("Infinite Jump", function()
+    infjump = not infjump
+end)
+
+btn("SpinBot", function()
+    spinbot = not spinbot
+    if spinbot then spinOn() else spinOff() end
+end)
+
+btn("Anti Ragdoll", function()
+    autorag = not autorag
+end)
+
+btn("Auto Play", function()
+    autoplay = not autoplay
+end)
